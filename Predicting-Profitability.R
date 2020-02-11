@@ -4,10 +4,12 @@ if(!require(pacman)){
   library(pacman)
 }
 
-pacman::p_load(lattice, ggplot2, caret, readr, corrplot, e1071, reshape2)
+pacman::p_load(lattice, ggplot2, caret, readr, corrplot, e1071, reshape2, rstudioapi)
 
 #load data sets
-getwd()
+current_path <- rstudioapi::getActiveDocumentContext()$path
+setwd(dirname(current_path))
+
 existingproductattributes2017 <- read_csv("existingproductattributes2017.csv")
 View(existingproductattributes2017)
 
@@ -44,7 +46,7 @@ summary(existingproductattributes2017)
 NAColumns <- colnames(existingproductattributes2017)[colSums(is.na(existingproductattributes2017)) > 0]
 NAColumns
 for (i in NAColumns) {
-  print(sum(is.na(existingproductattributes2017[,i])))
+  print(sum(is.na(existingproductattributes2017[, i])))
 }
 
 #check for outliers
@@ -52,7 +54,7 @@ numerical <- unlist(lapply(existingproductattributes2017, is.numeric))
 colnames <- colnames(existingproductattributes2017[ , numerical])
 
 for (i in unique(colnames)) {
-  print(boxplot(existingproductattributes2017[,i])$out)
+  print(boxplot(existingproductattributes2017[, i])$out)
 }
 
 #dummify product type
@@ -92,8 +94,8 @@ newproductattributes12 <- subset(newproductattributes12, select = -c(x5StarRevie
 #volume prediction
 #data split, 75% train, 25% test
 set.seed(123);inTraining <- createDataPartition(existingproductattributes12$Volume, p = .75, list = FALSE)
-training <- existingproductattributes12[inTraining,]
-testing <- existingproductattributes12[-inTraining,]
+training <- existingproductattributes12[inTraining, ]
+testing <- existingproductattributes12[-inTraining, ]
 
 #cross validation
 fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 1)
@@ -102,12 +104,12 @@ fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 1)
 set.seed(123);rfFit1 <- train(Volume~., data = training, method = "rf", trControl = fitControl, tuneLength = 5)
 rfFit1
 
-PredictionsrfFit1 <- predict(rfFit1,testing)
+PredictionsrfFit1 <- predict(rfFit1, testing)
 postResample(PredictionsrfFit1, testing$Volume)
 
 #predicted vs observed plot
-plot(PredictionsrfFit1, type = "l",lwd = 2, col = "tomato1", ylab = "Volume", main = "Random Forest Model",
-     ylim = c(0, 8000))
+plot(PredictionsrfFit1, type = "l", lwd = 2, col = "tomato1", ylab = "Volume",
+     main = "Random Forest Model", ylim = c(0, 8000))
 lines(testing$Volume, lwd = 2, col = "turquoise3")
 legend(1, 7000, pch = c(19), col = c("tomato1", "turquoise3"), c("Predicted", "Observed"))
 
@@ -120,7 +122,7 @@ PredictionslmFit1 <- predict(lmFit1, testing)
 postResample(PredictionslmFit1, testing$Volume)
 
 #predicted vs observed plot
-plot(PredictionslmFit1,type = "l",lwd = 2,col = "tomato1", ylab = "Volume", main = "Linear Model",
+plot(PredictionslmFit1,type = "l", lwd = 2, col = "tomato1", ylab = "Volume", main = "Linear Model",
      ylim = c(-1000, 6000))
 lines(testing$Volume, lwd = 2, col = "turquoise3")
 legend(1, 5000, pch = c(19), col = c("tomato1", "turquoise3"), c("Predicted", "Observed"))
@@ -134,7 +136,7 @@ postResample(PredictionssvmFit1, testing$Volume)
 
 #predicted vs observed plot
 plot(PredictionssvmFit1, type = "l", lwd = 2, col = "tomato1", ylab = "Volume", main = "SVM Model",
-     ylim = c(0,6000))
+     ylim = c(0, 6000))
 lines(testing$Volume, lwd = 2, col = "turquoise3")
 legend(1, 5000, pch = c(19), col = c("tomato1", "turquoise3"), c("Predicted", "Observed"))
 
@@ -142,12 +144,12 @@ legend(1, 5000, pch = c(19), col = c("tomato1", "turquoise3"), c("Predicted", "O
 set.seed(123);knnFit1 <- train(Volume~., data = training, method = "knn", trControl = fitControl)
 knnFit1
 
-PredictionsknnfFit1 <- predict(knnFit1,testing)
+PredictionsknnfFit1 <- predict(knnFit1, testing)
 postResample(PredictionsknnfFit1, testing$Volume)
 
 #predicted vs observed plot
 plot(PredictionsknnfFit1, type = "l", lwd = 2, col = "tomato1", ylab = "Volume", main = "K-NN Model",
-     ylim = c(0,6000))
+     ylim = c(0, 6000))
 lines(testing$Volume, lwd = 2, col = "turquoise3")
 legend(1, 5000, pch = c(19), col = c("tomato1", "turquoise3"), c("Predicted", "Observed"))
 
@@ -159,7 +161,7 @@ legend(1, 5000, pch = c(19), col = c("tomato1", "turquoise3"), c("Predicted", "O
 #KNN  412.5192027   0.6629773   249.2631579
 
 #predictions on new products
-newpPredictionssvmFit1 <- predict(svmFit1,newproductattributes12)
+newpPredictionssvmFit1 <- predict(svmFit1, newproductattributes12)
 newpPredictionssvmFit1
 
 #rounded predicted volume
@@ -183,7 +185,7 @@ newproductattributes2017 <- subset(newproductattributes2017, select = -c(x5StarR
                                                                          ProductDepth, ProductWidth,
                                                                          ProductHeight))
 #export data frame to computer
-write.csv(newproductattributes2017,"newproductattributes2017complete.csv")
+write.csv(newproductattributes2017, "newproductattributes2017complete.csv")
 
 #Total Predicted Profit Per Product Type [SVM]
 ggplot(newproductattributes2017,
@@ -191,9 +193,9 @@ ggplot(newproductattributes2017,
            y = newproductattributes2017$PredictedProfit,
            fill = newproductattributes2017$ProductType)) +
   geom_bar(stat = "identity") +
-  labs(fill = "Product Type" ,title = "Total Predicted Profit Per Product Type [SVM]") +
+  labs(fill = "Product Type", title = "Total Predicted Profit Per Product Type [SVM]") +
   scale_x_discrete(name = "Product Type") +
-  scale_y_continuous(name = "Profit", breaks = seq(0,500000,50000))
+  scale_y_continuous(name = "Profit", breaks = seq(0, 500000, 50000))
 
 #Total Predicted Volume Per Product Type [SVM]
 ggplot(newproductattributes2017,
@@ -203,32 +205,32 @@ ggplot(newproductattributes2017,
   geom_bar(stat = "identity") +
   labs(fill = "Product Type" ,title = "Total Predicted Volume Per Product Type [SVM]") +
   scale_x_discrete(name = "Product Type") +
-  scale_y_continuous(name = "Volume", breaks = seq(0,500000,50000))
+  scale_y_continuous(name = "Volume", breaks = seq(0, 500000, 50000))
 
 #exploratory analysis
 #Scatter plot - (4 Star/ 2 Star / Pos REviews / Neg Reviews) vs Volume
-plot(existingproductattributes12$Volume,existingproductattributes12$x4StarReviews,
-     xlab = "Volume", ylab = "4 Star Reviews", pch = (19),cex.lab = 1.5,
+plot(existingproductattributes12$Volume, existingproductattributes12$x4StarReviews,
+     xlab = "Volume", ylab = "4 Star Reviews", pch = (19), cex.lab = 1.5,
      main = "4 Star Reviews & Volume", cex.main = 1.5, frame.plot = FALSE, col = "turquoise3")
 par(xpd = FALSE)
 abline(lm(existingproductattributes12$x4StarReviews ~ existingproductattributes12$Volume),
        col = "tomato1", lwd = 3)
 
-plot(existingproductattributes12$Volume,existingproductattributes12$x2StarReviews,
+plot(existingproductattributes12$Volume, existingproductattributes12$x2StarReviews,
      xlab = "Volume", ylab = "2 Star Reviews", pch = (19), cex.lab = 1.5,
      main = "2 Star Reviews & Volume", cex.main = 1.5, frame.plot = FALSE, col = "turquoise3")
 abline(lm(existingproductattributes12$x2StarReviews ~ existingproductattributes12$Volume),
        col = "tomato1", lwd = 3)
 
-plot(existingproductattributes12$Volume,existingproductattributes12$PositiveServiceReview,
+plot(existingproductattributes12$Volume, existingproductattributes12$PositiveServiceReview,
      xlab = "Volume", ylab = "Positive Service Reviews", pch = (19), cex.lab = 1.5,
-     main = "Positive Service Reviews & Volume", cex.main = 1.5, frame.plot = FALSE,col = "turquoise3")
+     main = "Positive Service Reviews & Volume", cex.main = 1.5, frame.plot = FALSE, col = "turquoise3")
 abline(lm(existingproductattributes12$PositiveServiceReview ~ existingproductattributes12$Volume),
        col = "tomato1", lwd = 3)
 
-plot(existingproductattributes12$Volume,existingproductattributes12$NegativeServiceReview,
+plot(existingproductattributes12$Volume, existingproductattributes12$NegativeServiceReview,
      xlab = "Volume", ylab = "Negative Service Reviews", pch = (19), cex.lab = 1.5,
-     main = "Negative Service Reviews & Volume", cex.main = 1.5, frame.plot = FALSE,col = "turquoise3")
+     main = "Negative Service Reviews & Volume", cex.main = 1.5, frame.plot = FALSE, col = "turquoise3")
 abline(lm(existingproductattributes12$NegativeServiceReview ~ existingproductattributes12$Volume),
        col = "tomato1", lwd = 3)
 
@@ -306,13 +308,13 @@ ggplot(existingproductattributes26,
        aes(x = reorder(Category, -x),
            y = x)) +
   geom_bar(stat = "identity", fill = "tomato1") +
-  labs(fill = "Product Type" ,title = "Blackwell Sales by Product Type") +
+  labs(fill = "Product Type", title = "Blackwell Sales by Product Type") +
   scale_x_discrete(name = "") +
   scale_y_continuous(name = "", breaks = seq(0, 25000, 5000)) +
   theme(text = element_text(size = 19), axis.text.x = element_text(angle = 45, hjust = 1, size = 17),
         plot.title = element_text(hjust = 0.5), legend.text = element_text(size = 17),
-        panel.grid  = element_blank(),panel.background = element_rect(fill = "transparent"),
-        axis.ticks = element_blank(),legend.position = "none")
+        panel.grid  = element_blank(), panel.background = element_rect(fill = "transparent"),
+        axis.ticks = element_blank(), legend.position = "none")
 
 
 
