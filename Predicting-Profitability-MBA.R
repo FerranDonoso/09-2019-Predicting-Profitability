@@ -157,6 +157,11 @@ New_Products["Volume"] <- round(NewpPredictionsrfFit1, 0)
 New_Products["Profit"] <-
   round(New_Products$ProfitMargin * New_Products$Volume * New_Products$Price, 0)
 
+# New product predictions
+New_Products_T <- subset(New_Products, select = c(ProductType, ProductNum, Price,
+                                                  ProfitMargin, Volume, Profit))
+New_Products_T <- New_Products_T[order(New_Products_T$Profit, decreasing = TRUE), ]
+
 # Total predicted Profit per ProductType
 ggplot(New_Products,
        aes(x = New_Products$ProductType,
