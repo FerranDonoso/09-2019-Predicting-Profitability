@@ -170,7 +170,7 @@ ggplot(New_Products,
   geom_bar(stat = "identity") +
   labs(fill = "Product Type", title = "Total Predicted Profit Per Product Type") +
   scale_x_discrete(name = "Product Type") +
-  scale_y_continuous(name = "Profit in ???", breaks = seq(0, 120000, 20000)) +
+  scale_y_continuous(name = "Profit in Eur", breaks = seq(0, 120000, 20000)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Total predicted Volume per ProductType
@@ -257,7 +257,7 @@ summary(Transactions)
 # Plot transaction size
 transactionSize <- size(Transactions)
 
-h <- hist(transactionSize, col = "cadetblue", breaks = 30, xaxt = "n", ylim = c(0, 2500),
+h <- hist(transactionSize, col = "turquoise3", breaks = 30, xaxt = "n", ylim = c(0, 2500),
           xlab = "Transaction Size", main = "Transaction Size Histogram", las = 1)
 axis(1, at = seq(0, 30, by = 1))
 text(h$mids,h$counts,labels = h$counts, adj = c(0, -0.5), srt = 45)
@@ -295,6 +295,9 @@ axis(2, at = seq(0, 6000, by = 1000), tick = FALSE, las = 2, line = -1)
 ProductType_Rules <- apriori (Transactions_ProductType,
                               parameter = list(supp = 0.08, conf = 0.5, minlen = 2))
 
+ProductType_Rules <- ProductType_Rules[!is.redundant(ProductType_Rules)]
+
+# Remove redundant rules
 ProductType_Rules <- ProductType_Rules[!is.redundant(ProductType_Rules)]
 
 # Plot product type rules
